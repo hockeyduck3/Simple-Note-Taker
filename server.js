@@ -3,7 +3,7 @@ var express = require('express');
 
 // Variables for the server
 var server = express();
-var PORT = 3000;
+var PORT = process.env.PORT || 3000;
 
 // Data parsing
 server.use(express.urlencoded({ extended: true }));
