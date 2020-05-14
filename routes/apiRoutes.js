@@ -1,13 +1,23 @@
 // Dependencies
 var data = require('../db/db.json');
 var fs = require('fs');
-var {v4: uuidv4} = require('uuid')
+var {v4: uuidv4} = require('uuid');
+const util = require("util");
+
+// Variables needed for reading and writing to the database
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
+
 
 // Server function
 module.exports = function(server) {
     // Get JSON api
     server.get('/api/notes', function(req, res) {
-        return res.json(data);
+        readFileAsync('./db/db.json', 'utf8').then(i => {
+            let item = JSON.parse(i);
+
+            return res.json(item)
+        })
     });
 
     // Post to the JSON api
@@ -23,15 +33,18 @@ module.exports = function(server) {
         };
 
         // Write the new note to the JSON in the db folder
-        fs.readFile('./db/db.json', 'utf8', function(err, res) {
-            if (err) throw err;
-
-            let json = JSON.parse(res);
+        return readFileAsync('./db/db.json', 'utf8').then(jsonRes => {
+            let json = JSON.parse(jsonRes);
 
             json.push(note);
 
-            fs.writeFileSync('./db/db.json', JSON.stringify(json));
-        })
+            return writeFileAsync('./db/db.json', JSON.stringify(json)).then(function () {
+                return res.json(json);
+            });
+        }).catch(error => {
+            throw error;
+        });
+
     });
 
     // Delete a note function
@@ -47,11 +60,13 @@ module.exports = function(server) {
         }
 
         // Filter out the note with the matching id
-        let newJson = data.filter(function(res) {
-            return res.id !== deleteNote;
-        })
+        let newJson = data.filter(function(item) {
+            return item.id !== deleteNote;
+        });
 
         // Overwrite the saved JSON with the new (filtered) JSON
-        fs.writeFileSync('./db/db.json', JSON.stringify(newJson))
+        fs.writeFileSync('./db/db.json', JSON.stringify(newJson));
+
+        res.json({ok: true});
     })
 }
