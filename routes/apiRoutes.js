@@ -1,5 +1,4 @@
 // Dependencies
-var data = require('../db/db.json');
 var fs = require('fs');
 var {v4: uuidv4} = require('uuid');
 const util = require("util");
@@ -52,21 +51,28 @@ module.exports = function(server) {
         // Grab which id of the note that the user clicked on
         let idToDelete = req.params.id;
 
-        // Loop through the saved notes and see which one has the matching id number
-        for (let i = 0; i < data.length; i++) {
-            if (data[i].id === idToDelete) {
-                var deleteNote = data[i].id;
+        // Read the database file
+        readFileAsync('./db/db.json', 'utf8').then(file => {
+            // Parse the file into JSON
+            let returnedJson = JSON.parse(file);
+
+            // Loop through the saved notes and see which one has the matching id number
+            for (let i = 0; i < returnedJson.length; i++) {
+                if (returnedJson[i].id === idToDelete) {
+                    var deleteNote = returnedJson[i].id;
+                }
             }
-        }
 
-        // Filter out the note with the matching id
-        let newJson = data.filter(function(item) {
-            return item.id !== deleteNote;
-        });
+            // Filter out the note with the matching id
+            let newJson = returnedJson.filter(function(item) {
+                return item.id !== deleteNote;
+            });
 
-        // Overwrite the saved JSON with the new (filtered) JSON
-        fs.writeFileSync('./db/db.json', JSON.stringify(newJson));
+            // Overwrite the saved JSON with the new (filtered) JSON
+            fs.writeFileSync('./db/db.json', JSON.stringify(newJson));
 
-        res.json({ok: true});
+            // Send back status 200
+            res.json({ok: true});
+        })
     })
 }
