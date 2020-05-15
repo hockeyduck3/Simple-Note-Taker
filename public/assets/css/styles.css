@@ -34,6 +34,22 @@ html, body {
   font-size: 3rem;
 }
 
+.navbar {
+  background-color: #dab437 !important;
+}
+
+.navbar-brand, .display-4 {
+  font-family: 'Caveat', cursive;
+}
+
+.navbar-brand {
+  font-size: 30px;
+}
+
+.fa-save::before, .fa-plus::before {
+  color: white;
+}
+
 .note-title:read-only, .note-textarea:read-only {
   color: #757575;
 }
