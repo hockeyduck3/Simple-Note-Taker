@@ -44,16 +44,17 @@ var renderActiveNote = function() {
     $editNoteBtn.show();
     $noteTitle.attr("readonly", true);
     $noteText.attr("readonly", true);
-    $noteTitle.val(activeNote.title);
 
     // This if statement will check and see if the note being rendered is one that the user just made or just edited
     if (noteData !== '') {
       for (let i = 0; i < noteData.length; i++) {
         if (noteData[i].id === activeNote.id) {
+          $noteTitle.val(noteData[i].title);
           $noteText.val(noteData[i].text);
         }
       }
     } else {
+      $noteTitle.val(activeNote.title);
       $noteText.val(activeNote.text)
     }
       
