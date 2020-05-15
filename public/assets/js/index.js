@@ -2,10 +2,14 @@ var $noteTitle = $(".note-title");
 var $noteText = $(".note-textarea");
 var $saveNoteBtn = $(".save-note");
 var $newNoteBtn = $(".new-note");
+var $editNoteBtn = $(".edit-note");
 var $noteList = $(".list-container .list-group");
 
 // activeNote is used to keep track of the note in the textarea
 var activeNote = {};
+
+// noteData will be used for if the user wants to edit a previous note
+var noteData = '';
 
 // A function for getting all notes from the db
 var getNotes = function() {
@@ -37,11 +41,24 @@ var renderActiveNote = function() {
   $saveNoteBtn.hide();
 
   if (activeNote.id) {
+    $editNoteBtn.show();
     $noteTitle.attr("readonly", true);
     $noteText.attr("readonly", true);
     $noteTitle.val(activeNote.title);
-    $noteText.val(activeNote.text);
+
+    // This if statement will check and see if the note being rendered is one that the user just made or just edited
+    if (noteData !== '') {
+      for (let i = 0; i < noteData.length; i++) {
+        if (noteData[i].id === activeNote.id) {
+          $noteText.val(noteData[i].text);
+        }
+      }
+    } else {
+      $noteText.val(activeNote.text)
+    }
+      
   } else {
+    $editNoteBtn.hide();
     $noteTitle.attr("readonly", false);
     $noteText.attr("readonly", false);
     $noteTitle.val("");
@@ -49,14 +66,31 @@ var renderActiveNote = function() {
   }
 };
 
+// This will allow the user to freely edit a previous note they made
+var editActiveNote = function() {
+  $editNoteBtn.hide();
+  $saveNoteBtn.show();
+  $noteTitle.attr("readonly", false);
+  $noteText.attr("readonly", false);
+}
+
 // Get the note data from the inputs, save it to the db and update the view
 var handleNoteSave = function() {
-  var newNote = {
-    title: $noteTitle.val(),
-    text: $noteText.val()
-  };
+  if (activeNote.id) {
+    var newNote = {
+      title: $noteTitle.val(),
+      text: $noteText.val(),
+      id: activeNote.id
+    }
+  } else {
+    var newNote = {
+      title: $noteTitle.val(),
+      text: $noteText.val()
+    };
+  }
 
   saveNote(newNote).then(function(data) {
+    noteData = data;
     getAndRenderNotes();
     renderActiveNote();
   });
@@ -132,6 +166,7 @@ var getAndRenderNotes = function() {
   });
 };
 
+$editNoteBtn.on("click", editActiveNote)
 $saveNoteBtn.on("click", handleNoteSave);
 $noteList.on("click", ".list-group-item", handleNoteView);
 $newNoteBtn.on("click", handleNewNoteView);

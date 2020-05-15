@@ -7,6 +7,8 @@ const util = require("util");
 const readFileAsync = util.promisify(fs.readFile);
 const writeFileAsync = util.promisify(fs.writeFile);
 
+// id variable for saving a note
+var id = '';
 
 // Server function
 module.exports = function(server) {
@@ -21,11 +23,16 @@ module.exports = function(server) {
 
     // Post to the JSON api
     server.post('/api/notes', function(req, res) {
-        // Create a new unique id for the note
-        let id = uuidv4();
+        // If the req comes back with an id then id will be set to that id
+        if (req.body.id) {
+            id = req.body.id;
+        } else {
+            // Create a new unique id for the note
+            id = uuidv4();
+        }
 
         // Save the note as an object
-        let note = {
+        var note = {
             title: req.body.title,
             text: req.body.text,
             id: id
@@ -35,7 +42,21 @@ module.exports = function(server) {
         return readFileAsync('./db/db.json', 'utf8').then(jsonRes => {
             let json = JSON.parse(jsonRes);
 
-            json.push(note);
+            // This will check and see if the user is saving a new note or editing a previous one
+            if (req.body.id) {
+                // If they are editing a previous note
+                // This will go and find the index of the previous note in the database and replace it
+                for (let i = 0; i < json.length; i++) {
+                    if (json[i].id === note.id) {
+                        var noteIndex = json.indexOf(json[i]);
+                    }
+                }
+    
+                json[noteIndex] = note;
+
+            } else {
+                json.push(note);
+            }
 
             return writeFileAsync('./db/db.json', JSON.stringify(json)).then(function () {
                 return res.json(json);
@@ -43,7 +64,6 @@ module.exports = function(server) {
         }).catch(error => {
             throw error;
         });
-
     });
 
     // Delete a note function
